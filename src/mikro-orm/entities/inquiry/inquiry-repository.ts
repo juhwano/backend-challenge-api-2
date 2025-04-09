@@ -15,10 +15,6 @@ export class InquiryRepository {
     businessType: string;
     businessNumber?: string;
   }): Promise<InquiryEntity> {
-    if (!inquiry.phoneNumber || !inquiry.businessType) {
-      throw new Error('필수 필드가 누락되었습니다.');
-    }
-
     const newInquiry = this.writeRepository.create({
       phoneNumber: inquiry.phoneNumber,
       businessType: inquiry.businessType,
