@@ -15,7 +15,7 @@ export class PublicApiController {
   @Post('/inquiry')
   @UsePipes(new ValidationPipe({ transform: true }))
   createInquiry(
-    @Body('phoneNumber', PhoneNumberValidationPipe) phoneNumber: string,
+    @Body('phoneNumber', new PhoneNumberValidationPipe()) phoneNumber: string,
     @Body() createInquiryDto: CreateInquiryDto
   ) {
     // phoneNumber 값을 createInquiryDto에 할당

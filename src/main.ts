@@ -18,7 +18,11 @@ async function bootstrap() {
     },
   );
   const config = new DocumentBuilder()
-    .setTitle('ishopcare-preview-test')
+    .setTitle('아이샵케어 API')
+    .setDescription('아이샵케어 사전 과제 API 문서')
+    .setVersion('1.0')
+    .addTag('Public API', '구매 상담 정보 입력 페이지용 Public API')
+    .addTag('Internal API', '내부 Admin 용 API')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
