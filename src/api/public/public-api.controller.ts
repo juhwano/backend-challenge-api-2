@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { PublicApiService } from './public-api.service';
-import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { CreateInquiryDto } from './dto/create-inquiry.dto';
 
 @ApiTags('Public API')
 @Controller('public')
@@ -9,7 +10,7 @@ export class PublicApiController {
 
   @ApiOperation({ summary: '구매 상담 등록 API' })
   @Post('/inquiry')
-  createInquiry() {
-    return this.publicApiService.createInquiry({});
+  createInquiry(@Body() createInquiryDto: CreateInquiryDto) {
+    return this.publicApiService.createInquiry(createInquiryDto);
   }
 }

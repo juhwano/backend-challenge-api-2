@@ -10,9 +10,24 @@ export class InquiryRepository {
     private readonly writeRepository: EntityRepository<InquiryEntity>,
   ) {}
 
-  async create(inquiry: InquiryEntity) {
-    this.writeRepository.create(inquiry);
+  async create(inquiry: {
+    phoneNumber: string;
+    businessType: string;
+    businessNumber?: string;
+  }): Promise<InquiryEntity> {
+    if (!inquiry.phoneNumber || !inquiry.businessType) {
+      throw new Error('필수 필드가 누락되었습니다.');
+    }
+
+    const newInquiry = this.writeRepository.create({
+      phoneNumber: inquiry.phoneNumber,
+      businessType: inquiry.businessType,
+      businessNumber: inquiry.businessNumber,
+      createdAt: Math.floor(Date.now() / 1000),
+    });
+    
     await this.writeRepository.getEntityManager().flush();
+    return newInquiry;
   }
 
   async findAll() {
