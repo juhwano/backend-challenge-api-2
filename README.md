@@ -1,72 +1,215 @@
-# 아이샵케어 Full Stack Developer (Node.js) 사전 과제
+# 기술 과제 - REST API 개발
 
-구매 상담 정보를 받아서 저장하고, 내부 Admin에서 검색/필터 조회하는 기능을 제공하는 API 서버 어플리케이션을 구현해주세요.
+## 목차
+- [개발 환경](#개발-환경)
+- [빌드 및 실행하기](#빌드-및-실행하기)
+- [기능 요구사항](#기능-요구사항)
+- [폴더 구조](#폴더-구조)
+- [API](#api)
+- [성능 최적화 전략](#성능-최적화-전략)
+- [결과](#결과)
 
-## 📌 제약 사항
+<br/><br/>
 
-- 🟦 **TypeScript**로 구현해 주세요.
-- 🧱 기존 `ishopcare-preview-test` 레포의 코드 베이스를 활용하되, 자유롭게 수정하셔도 괜찮습니다. 단, **NestJS 아키텍처**는 가능하면 적극 활용해 주세요.
-- 🤔 위 조건 외에는 **개인 판단**에 따라 효율적인 방식으로 구현해 주세요. **모든 지원자 분들께 동일한 경험을 제공해 드리기 위해, 개별적인 과제 관련 문의 사항은 답변 드리기 어려움을 양해 부탁 드립니다.**
+## 개발 환경
+- 기본 환경
+    - TypeScript 5.7.3
+    - Node.js 20 이상
+- 서버
+    - NestJS 11.0.1
+    - Fastify 5.2.2
+- DB
+    - SQLite (@mikro-orm/sqlite 6.4.11)
+- 캐싱 및 성능 최적화
+    - Redis 캐시 (cache-manager-redis-store 3.0.1)
+    - 읽기 전용 복제본 (Read Replica)
+- 테스트
+    - Jest 29.7.0
+    - SuperTest 7.0.0
+- API 문서화
+    - Swagger/OpenAPI (@nestjs/swagger 11.1.1)
 
-## ⚙️ 과제 템플릿 초기 세팅 방법
+<br/><br/>
 
-- 📦 ~~`pnpm install` 를 통해 의존성 패키지를 설치합니다.~~ -> SQLite3 바인딩 파일 오류 발생되므로 `npm install`로 의존성 설치할 것
-- 🔧 본 과제 템플릿은 **Node.js 20** 버전에서 작성되었습니다. `Node 20` 이상 버전을 사용하길 권장드립니다.
-- 🧬 `pnpm schema:generate` 실행 시 `sqlite3` 파일이 생성됩니다. `inquiry-entity.ts` 코드를 수정한 경우, 해당 명령어로 스키마를 업데이트해주세요.
-- 🚀 `pnpm start:dev` 를 통해 서버 및 배치 작업을 실행시킵니다. http://localhost:8081/api-docs에 접속하면 swagger 문서를 확인할 수 있습니다.
+## 빌드 및 실행하기
+### 사전 요구사항
+- Node.js 20 이상 설치
+- Redis 서버 설치 및 실행 (캐싱 기능 사용 시)
 
-## 📦 과제 템플릿 구조
+### 설치 및 실행
+```bash
+# 의존성 패키지 설치 (SQLite3 바인딩 파일 오류 방지를 위해 npm 사용)
+$ npm install
 
-```txt
-📦src
- ┣ 📂api
- ┃ ┣ 📂internal : 내부 Admin 용 API
- ┃ ┃ ┣ 📜internal-api.controller.ts
- ┃ ┃ ┣ 📜internal-api.module.ts
- ┃ ┃ ┗ 📜internal-api.service.ts
- ┃ ┗ 📂public : 구매 상담 정보 입력 페이지용 Public API
- ┃ ┃ ┣ 📜public-api.controller.ts
- ┃ ┃ ┣ 📜public-api.module.ts
- ┃ ┃ ┗ 📜public-api.service.ts
- ┣ 📂mikro-orm : DB 관련 모듈
- ┃ ┣ 📂entities
- ┃ ┃ ┗ 📂inquiry
- ┃ ┃ ┃ ┣ 📜inquiry-entity.ts
- ┃ ┃ ┃ ┣ 📜inquiry-repository.module.ts
- ┃ ┃ ┃ ┗ 📜inquiry-repository.ts
- ┃ ┣ 📂scripts
- ┃ ┃ ┗ 📜schema-generator.ts
- ┃ ┗ 📜const.ts
- ┣ 📜app.module.ts
- ┗ 📜main.ts
+# 스키마 생성 (SQLite 데이터베이스 초기화)
+$ pnpm schema:generate
+
+# 개발 서버 실행
+$ pnpm start:dev
+
+# 테스트 실행
+$ npm run test
+
+# 테스트 커버리지 확인
+$ npm run test:cov
+
+# 더미 데이터 추가
+$ npm run add:dummy-data
 ```
 
-## 과제 요구사항
 
-- Mission : 구매 상담 정보를 받아서 저장하고, 내부 Admin에서 검색/필터 조회하는 기능을 제공하는 API 서버 어플리케이션을 구현해주세요.
+<br/><br/>
 
-  - 아래 항목 중 "✅ 필수 사항" 부터 구현해주시면 좋습니다. 필수 사항 마무리 후 "🟡 선택 사항" 까지 고려해서 개발해주시면 좋습니다.
+## 기능 요구사항
+### 필수사항
+- 구매 상담 정보를 받아서 저장하는 API 구현
+- 내부 Admin에서 구매 상담 내역을 검색/필터 조회하는 API 제
+- 구매 상담 내역이 등록된 일자 기반 필터링 조회 기능
 
-- Step 1. 구매 상담 등록 API
+### 고려사항
+- 전화번호 기반 구매 상담 내역 검색 기능 구현
+- 등록된 일자 기반 구매 상담 내역 필터링 조회 기능 구현(ex: 2025-03-01 ~ 2025-03-31 사이에 등록된 구매 상담 내역만 조회)
+- 유효한 전화번호 검증 로직 디테일하게 구현
+- 전화번호 유효성 검사 로직 test case 작성
+- 대용량 데이터 처리 (수만~수십만 건)를 위한 쿼리 최적화
 
-  - https://ishopcare.co.kr/event/front01 페이지를 위한 API를 구현해주신다고 생각하시면 됩니다.
-  - ✅ `src/api/public` 디렉토리에서 작업을 시작해주시면 됩니다.
-  - ✅ 페이지의 입력 값들을 참고해서 `[POST] /public/inquiry` API의 body를 정의해주세요. 입력 값을 저장할 수 있도록 적합한 필드명을 정의해서 `mikro-orm/entities/inquiry` 내부를 구현해주세요.
-  - ✅ 제출한 코드에서 API 호출시 DB에 구매 상담 문의가 정상적으로 저장되는지 여부가 가장 중요합니다.
-  - 🟡 유효하지 않은 전화번호인 경우 `400 Bad Request` 오류가 뜨도록 해주세요. 유효한 전화번호를 판별하는 로직을 가능한 디테일하게 구현해주세요. (참고 : https://namu.wiki/w/010#s-3)
-  - 🟡 전화번호 유효성을 검사하는 로직을 함수로 추출하고 test case를 작성해주세요.
 
-- Step 2. 내부 Admin 구매 상담 조회 API
+<br/><br/>
 
-  - Step 1을 통해 저장한 구매 상담 내역을 내부 Admin에서 조회하기 위한 API를 구현해주신다고 생각하시면 됩니다.
-  - ✅ `src/api/internal` 디렉토리에서 작업을 시작해주시면 됩니다.
-  - ✅ 전화번호로 검색할 수 있도록 `[GET] /interal/inquiries` API의 query를 정의해주세요. 저장된 내역을 검색해서 조회할 수 있도록 `mikro-orm/entities/inquiry` 내부를 구현해주세요.
-  - ✅ 제출한 코드에서 API 호출시 전화번호를 기반으로 적합한 내역만 조회되는지 여부가 가장 중요합니다. (ex: 010-1234-1234 번호만 조회)
-  - 🟡 구매 상담 내역이 등록된 일자를 기반으로 필터링 조회할 수 있는 기능을 구현해주세요. (ex: 2025-03-01 ~ 2025-03-31 사이에 등록된 구매 상담 내역만 조회)
-  - 🟡 구매 상담 내역이 수만~수십만건으로 수량이 늘어난다고 가정할 때 쿼리를 최적화할 수 있는 다양한 방법을 고민하고 적용해주세요.
+## 폴더 구조
 
-## 제출 방법
+```plaintext
+📦ishopcare-preview-test-main
+ ┣ 📂src
+ ┃ ┣ 📂api
+ ┃ ┃ ┣ 📂internal                # 내부 Admin용 API
+ ┃ ┃ ┃ ┣ 📂dto                   # 데이터 전송 객체
+ ┃ ┃ ┃ ┣ 📂pipes                 # 커스텀 파이프 (데이터 검증)
+ ┃ ┃ ┃ ┣ 📜internal-api.controller.ts
+ ┃ ┃ ┃ ┣ 📜internal-api.module.ts
+ ┃ ┃ ┃ ┗ 📜internal-api.service.ts
+ ┃ ┃ ┗ 📂public                  # 구매 상담 정보 입력 페이지용 Public API
+ ┃ ┃ ┃ ┣ 📂dto                   # 데이터 전송 객체
+ ┃ ┃ ┃ ┣ 📜public-api.controller.ts
+ ┃ ┃ ┃ ┣ 📜public-api.module.ts
+ ┃ ┃ ┃ ┗ 📜public-api.service.ts
+ ┃ ┣ 📂cache                     # 캐시 관련 모듈
+ ┃ ┃ ┗ 📜cache.module.ts
+ ┃ ┣ 📂mikro-orm                 # DB 관련 모듈
+ ┃ ┃ ┣ 📂entities
+ ┃ ┃ ┃ ┗ 📂inquiry
+ ┃ ┃ ┃ ┃ ┣ 📜inquiry-entity.ts   # 구매 상담 엔티티
+ ┃ ┃ ┃ ┃ ┣ 📜inquiry-repository.module.ts
+ ┃ ┃ ┃ ┃ ┗ 📜inquiry-repository.ts # 구매 상담 리포지토리
+ ┃ ┃ ┣ 📂scripts                 # DB 스키마 생성 및 더미 데이터 추가 스크립트
+ ┃ ┃ ┃ ┣ 📜add-dummy-data.ts
+ ┃ ┃ ┃ ┗ 📜schema-generator.ts
+ ┃ ┃ ┗ 📜const.ts               # DB 관련 상수
+ ┃ ┣ 📂utils                     # 유틸리티 함수
+ ┃ ┃ ┗ 📜phone-number-validator.ts # 전화번호 유효성 검증
+ ┃ ┣ 📜app.module.ts             # 애플리케이션 루트 모듈
+ ┃ ┗ 📜main.ts                   # 애플리케이션 진입점
+ ┣ 📂test                        # 테스트 코드
+ ┃ ┣ 📂api
+ ┃ ┃ ┣ 📂internal
+ ┃ ┃ ┗ 📂public
+ ┃ ┣ 📂mikro-orm
+ ┃ ┃ ┗ 📂entities
+ ┃ ┃ ┃ ┗ 📂inquiry
+ ┃ ┗ 📂utils
+ ┣ 📜.gitignore
+ ┣ 📜.prettierrc
+ ┣ 📜README.md
+ ┣ 📜eslint.config.mjs
+ ┣ 📜jest.config.ts
+ ┣ 📜nest-cli.json
+ ┣ 📜package.json
+ ┣ 📜tsconfig.build.json
+ ┗ 📜tsconfig.json
+```
 
-- node_modules,dist 폴더를 삭제하시고 해당 프로젝트를 압축해 주세요.
-- 압축된 파일이름은 다음과 같은 예시대로 작성해 주세요. (지원자명\_제출일자.zip)
-  - 홍길동\_20230101.zip
+<br/><br/>
+
+## API
+- Swagger UI: `http://localhost:8081/api-docs`
+- API 문서는 서버 실행 후 위 URL에서 확인 가능합니다.
+
+### 구매 상담 등록 API
+- **URL**: `/public/inquiry`
+- **Method**: `POST`
+- **Description**: 구매 상담 정보를 등록합니다.
+- **Request Body**:
+  ```json
+  {
+    "phoneNumber": "01012345678",
+    "businessType": "카페",
+    "businessNumber": "1234567890"
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "id": 1,
+    "message": "구매 상담 등록이 완료되었습니다."
+  }
+  ```
+
+### 구매 상담 내역 조회 API
+- **URL**: `/internal/inquiries`
+- **Method**: `GET`
+- **Description**: 구매 상담 내역을 조회합니다.
+- **Query Parameters**:
+  - `phoneNumber` (선택): 전화번호로 필터링
+  - `startDate` (선택): 시작 날짜 (YYYY-MM-DD)
+  - `endDate` (선택): 종료 날짜 (YYYY-MM-DD)
+  - `page` (선택): 페이지 번호 (기본값: 1)
+  - `limit` (선택): 페이지당 항목 수 (기본값: 20)
+  - `sort` (선택): 정렬 기준 필드 (createdAt 또는 id, 기본값: createdAt)
+  - `order` (선택): 정렬 방향 (ASC 또는 DESC, 기본값: DESC)
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "id": 1,
+        "phoneNumber": "01012345678",
+        "businessType": "카페",
+        "businessNumber": "1234567890",
+        "createdAt": 1712345678
+      }
+    ],
+    "pagination": {
+      "total": 1,
+      "page": 1,
+      "limit": 20,
+      "pages": 1
+    }
+  }
+  ```
+
+<br/><br/>
+
+## 성능 최적화 전략
+### 1. 읽기 전용 복제본 활용
+- 읽기 작업과 쓰기 작업을 분리하여 DB 부하 분산
+- 최근 데이터는 마스터 DB에서 조회하여 데이터 정합성 보장
+
+### 2. Redis 캐싱
+- 자주 조회되는 날짜 범위의 결과를 캐싱하여 DB 부하 감소
+- 캐시 TTL 설정으로 데이터 신선도 유지
+- 새로운 구매 상담 등록 시 관련 캐시 무효화
+
+### 3. 쿼리 최적화
+- 날짜 범위 기반 필터링을 위한 효율적인 쿼리 구성
+- 페이지네이션 적용으로 대용량 데이터 효율적 처리
+
+
+<br/><br/>
+
+## 결과
+- 구매 상담 정보를 효율적으로 저장하고 조회할 수 있는 API 서버 구현
+- 읽기 전용 복제본(최근 데이터는 마스터 DB에서 조회)과 Redis 캐싱을 통한 성능 향상
+- NestJS 파이프를 활용한 강력한 입력 데이터 유효성 검증 구현
+- 조회 성능 최적화를 위한 유닉스 타임스탬프 활용 (날짜 기반 필터링 성능 향상, 인덱싱 효율성 증가)
