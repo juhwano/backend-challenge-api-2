@@ -23,19 +23,30 @@ export class InternalApiService {
   }, options?: {
     page?: number;
     limit?: number;
-    orderBy?: 'createdAt' | 'id';
-    orderDir?: 'ASC' | 'DESC';
+    sort?: 'createdAt' | 'id';
+    order?: 'ASC' | 'DESC';
   }) {
     // 날짜를 타임스탬프로 변환
     const startTimestamp = startDate ? Math.floor(startDate.getTime() / 1000) : undefined;
     const endTimestamp = endDate ? Math.floor(endDate.getTime() / 1000) : undefined;
-
+  
+    // 기본 옵션 설정
+    const defaultOptions = {
+      page: 1,
+      limit: 20,
+      sort: 'createdAt' as const,
+      order: 'DESC' as const,   
+    };
+  
+    // 사용자 옵션과 기본 옵션 병합
+    const finalOptions = { ...defaultOptions, ...options };
+  
     // 전화번호와 날짜 범위로 구매 상담 내역 검색
     const result = await this.inquiryRepository.findByPhoneNumberAndDateRange({
       phoneNumber,
       startTimestamp,
       endTimestamp,
-    }, options);
+    }, finalOptions);
     
     // 응답 데이터 구성
     return {

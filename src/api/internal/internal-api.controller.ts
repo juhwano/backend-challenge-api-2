@@ -43,14 +43,14 @@ export class InternalApiController {
     type: Number,
   })
   @ApiQuery({
-    name: 'orderBy',
+    name: 'sort',
     required: false,
     description: '정렬 기준 필드 (기본값: createdAt)',
     example: 'createdAt',
     enum: ['createdAt', 'id'],
   })
   @ApiQuery({
-    name: 'orderDir',
+    name: 'order',
     required: false,
     description: '정렬 방향 (기본값: DESC)',
     example: 'DESC',
@@ -59,22 +59,21 @@ export class InternalApiController {
   @Get('/inquiries')
   getInquiries(
     @Query('phoneNumber', new PhoneNumberValidationPipe({ optional: true })) phoneNumber?: string,
-    @Query('startDate', new DateValidationPipe({ optional: true })) startDate?: string,
-    @Query('endDate', new DateValidationPipe({ optional: true })) endDate?: string,
+    @Query('startDate', new DateValidationPipe()) startDate?: Date,
+    @Query('endDate', new DateValidationPipe()) endDate?: Date,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
-    @Query('orderBy') orderBy?: 'createdAt' | 'id',
-    @Query('orderDir') orderDir?: 'ASC' | 'DESC',
+    @Query('sort') sort: 'createdAt' | 'id' = 'createdAt',
+    @Query('order') order: 'ASC' | 'DESC' = 'DESC',
   ) {
-    return this.internalApiService.getInquiries({ 
-      phoneNumber,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
-    }, {
-      page: page ? Number(page) : 1,
-      limit: limit ? Number(limit) : 20,
-      orderBy,
-      orderDir,
-    });
+    return this.internalApiService.getInquiries(
+      { phoneNumber, startDate, endDate },
+      { 
+        page: page ? parseInt(page, 10) : 1,
+        limit: limit ? parseInt(limit, 10) : 20,
+        sort,
+        order
+      }
+    );
   }
 }
