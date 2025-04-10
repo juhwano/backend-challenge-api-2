@@ -72,17 +72,23 @@ describe('InternalApiService', () => {
       // given
       const startDate = new Date('2025-03-01');
       const endDate = new Date('2025-03-31');
-      const startTimestamp = Math.floor(startDate.getTime() / 1000);
-      const endTimestamp = Math.floor(endDate.getTime() / 1000);
+      
+      const startWithTime = new Date(startDate);
+      startWithTime.setHours(0, 0, 0, 0);
+      const expectedStartTimestamp = Math.floor(startWithTime.getTime() / 1000);
+      
+      const endWithTime = new Date(endDate);
+      endWithTime.setHours(23, 59, 59, 999);
+      const expectedEndTimestamp = Math.floor(endWithTime.getTime() / 1000);
       
       mockInquiryRepository.findByPhoneNumberAndDateRange.mockResolvedValue(testInquiryResult);
-
+    
       // when
       const result = await service.getInquiries({ 
         startDate, 
         endDate 
       });
-
+    
       // then
       expect(result.success).toBe(true);
       expect(result.data).toEqual(testInquiryResult.items);
@@ -91,8 +97,8 @@ describe('InternalApiService', () => {
       expect(repository.findByPhoneNumberAndDateRange).toHaveBeenCalledWith(
         { 
           phoneNumber: undefined, 
-          startTimestamp, 
-          endTimestamp 
+          startTimestamp: expectedStartTimestamp, 
+          endTimestamp: expectedEndTimestamp 
         },
         { page: 1, limit: 20, sort: 'createdAt', order: 'DESC' }
       );
@@ -145,6 +151,38 @@ describe('InternalApiService', () => {
         .toThrow(errorMessage);
         
       // verify
+      expect(repository.findByPhoneNumberAndDateRange).toHaveBeenCalledTimes(1);
+    });
+
+    it('같은 날짜가 시작일과 종료일로 입력되었을 때 해당 날짜의 전체 시간(00:00:00~23:59:59)을 포함하여 조회해야 함', async () => {
+      // given
+      const sameDate = new Date('2025-04-08');
+      
+      const expectedStartTimestamp = Math.floor(new Date(2025, 3, 8, 0, 0, 0).getTime() / 1000);
+      
+      const expectedEndTimestamp = Math.floor(new Date(2025, 3, 8, 23, 59, 59, 999).getTime() / 1000);
+      
+      mockInquiryRepository.findByPhoneNumberAndDateRange.mockResolvedValue(testInquiryResult);
+    
+      // when
+      const result = await service.getInquiries({ 
+        startDate: sameDate, 
+        endDate: sameDate 
+      });
+    
+      // then
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(testInquiryResult.items);
+      
+      // verify
+      expect(repository.findByPhoneNumberAndDateRange).toHaveBeenCalledWith(
+        { 
+          phoneNumber: undefined, 
+          startTimestamp: expectedStartTimestamp, 
+          endTimestamp: expectedEndTimestamp 
+        },
+        { page: 1, limit: 20, sort: 'createdAt', order: 'DESC' }
+      );
       expect(repository.findByPhoneNumberAndDateRange).toHaveBeenCalledTimes(1);
     });
   });

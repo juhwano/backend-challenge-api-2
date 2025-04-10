@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { InquiryRepository } from '../../mikro-orm/entities/inquiry/inquiry-repository';
-import { dateToTimestamp } from '../../utils/date-converter';
 
 @Injectable()
 export class InternalApiService {
@@ -26,11 +25,20 @@ export class InternalApiService {
     sort?: 'createdAt' | 'id';
     order?: 'ASC' | 'DESC';
   }) {
-    // 날짜를 타임스탬프로 변환
-    const startTimestamp = startDate ? Math.floor(startDate.getTime() / 1000) : undefined;
-    const endTimestamp = endDate ? Math.floor(endDate.getTime() / 1000) : undefined;
+    let startTimestamp: number | undefined = undefined;
+    if (startDate && startDate instanceof Date) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      startTimestamp = Math.floor(start.getTime() / 1000);
+    }
+    
+    let endTimestamp: number | undefined = undefined;
+    if (endDate && endDate instanceof Date) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      endTimestamp = Math.floor(end.getTime() / 1000);
+    }
   
-    // 기본 옵션 설정
     const defaultOptions = {
       page: 1,
       limit: 20,
@@ -38,17 +46,14 @@ export class InternalApiService {
       order: 'DESC' as const,   
     };
   
-    // 사용자 옵션과 기본 옵션 병합
     const finalOptions = { ...defaultOptions, ...options };
   
-    // 전화번호와 날짜 범위로 구매 상담 내역 검색
     const result = await this.inquiryRepository.findByPhoneNumberAndDateRange({
       phoneNumber,
       startTimestamp,
       endTimestamp,
     }, finalOptions);
     
-    // 응답 데이터 구성
     return {
       success: true,
       data: result.items,

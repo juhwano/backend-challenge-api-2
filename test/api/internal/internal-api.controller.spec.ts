@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { InternalApiController } from '../../../src/api/internal/internal-api.controller';
 import { InternalApiService } from '../../../src/api/internal/internal-api.service';
-import { DateValidationPipe } from '../../../src/api/internal/pipes/date-validation.pipe';
+import { GetInquiriesRequestDto } from '../../../src/api/internal/dto/get-inquiries-request.dto';
 
 jest.mock('../../../src/api/internal/pipes/date-validation.pipe', () => {
   return {
@@ -58,7 +58,6 @@ describe('InternalApiController', () => {
   });
 
   it('컨트롤러가 정의되어 있어야 함', () => {
-    // then
     expect(controller).toBeDefined();
   });
 
@@ -66,9 +65,15 @@ describe('InternalApiController', () => {
     it('전화번호로 구매 상담 내역을 조회할 수 있어야 함', async () => {
       // given
       const phoneNumber = '01012345678';
+      const queryParams = new GetInquiriesRequestDto();
       
       // When
-      const result = await controller.getInquiries(phoneNumber);
+      const result = await controller.getInquiries(
+        queryParams,
+        phoneNumber,
+        undefined,
+        undefined
+      );
       
       // then
       expect(service.getInquiries).toHaveBeenCalledWith(
@@ -88,9 +93,11 @@ describe('InternalApiController', () => {
       const endDateStr = '2025-03-31';
       const startDate = new Date(startDateStr);
       const endDate = new Date(endDateStr);
+      const queryParams = new GetInquiriesRequestDto();
       
       // when
       const result = await controller.getInquiries(
+        queryParams,
         undefined, 
         startDate, 
         endDate
@@ -108,30 +115,33 @@ describe('InternalApiController', () => {
       
       // then
       expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(1);
     });
 
     it('페이지네이션 옵션을 적용하여 구매 상담 내역을 조회할 수 있어야 함', async () => {
       // given
-      const page = '2';
-      const limit = '10';
-      const sort = 'id';
-      const order = 'ASC';
+      const phoneNumber = '01012345678';
+      const page = 2;
+      const limit = 10;
+      const sort = 'id' as 'createdAt' | 'id';
+      const order = 'ASC' as 'ASC' | 'DESC';
+      
+      const queryParams = new GetInquiriesRequestDto();
+      queryParams.page = page;
+      queryParams.limit = limit;
+      queryParams.sort = sort;
+      queryParams.order = order;
       
       // when
       const result = await controller.getInquiries(
-        undefined, 
-        undefined, 
-        undefined,
-        page,
-        limit,
-        sort,
-        order
+        queryParams,
+        phoneNumber
       );
       
       // then
       expect(service.getInquiries).toHaveBeenCalledWith(
-        { phoneNumber: undefined, startDate: undefined, endDate: undefined },
-        { page: 2, limit: 10, sort: 'id', order: 'ASC' }
+        { phoneNumber, startDate: undefined, endDate: undefined },
+        { page, limit, sort, order }
       );
       
       // then
