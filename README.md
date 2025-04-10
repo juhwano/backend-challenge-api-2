@@ -160,7 +160,7 @@ $ npm run add:dummy-data
 - **Method**: `GET`
 - **Description**: 구매 상담 내역을 조회합니다.
 - **Query Parameters**:
-  - `phoneNumber` (선택): 전화번호로 필터링
+  - `phoneNumber` (선택): 전화번호로 필터링 (01012345678)
   - `startDate` (선택): 시작 날짜 (YYYY-MM-DD)
   - `endDate` (선택): 종료 날짜 (YYYY-MM-DD)
   - `page` (선택): 페이지 번호 (기본값: 1)

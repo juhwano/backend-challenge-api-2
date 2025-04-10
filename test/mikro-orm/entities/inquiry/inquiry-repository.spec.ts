@@ -95,25 +95,6 @@ describe('InquiryRepository', () => {
     expect(results[0].phoneNumber).toBe('01012345678');
   });
 
-  it('부분 전화번호로 LIKE 검색을 수행할 수 있어야 함', async () => {
-    // given
-    const inquiry = entityManager.create(InquiryEntity, {
-      phoneNumber: testInquiry.phoneNumber,
-      businessType: testInquiry.businessType,
-      businessNumber: testInquiry.businessNumber,
-      createdAt: Math.floor(Date.now() / 1000),
-    });
-    
-    await entityManager.persistAndFlush([inquiry]);
-
-    // when
-    const results = await repository.findByPhoneNumber('0101');
-
-    // then
-    expect(results).toHaveLength(1);
-    expect(results[0].phoneNumber).toBe('01012345678');
-  });
-
   it('페이지네이션 옵션을 적용하여 구매 상담 내역을 검색할 수 있어야 함', async () => {
     // given
     const now = Math.floor(Date.now() / 1000);

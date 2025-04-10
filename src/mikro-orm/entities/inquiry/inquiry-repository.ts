@@ -24,7 +24,6 @@ export class InquiryRepository {
       createdAt: Math.floor(Date.now() / 1000),
     });
     
-    // 변경사항 저장
     await this.writeRepository.getEntityManager().persistAndFlush(newInquiry);
     return newInquiry;
   }
@@ -48,25 +47,16 @@ export class InquiryRepository {
 
     const cleanedPhoneNumber = phoneNumber.replace(/[-\s]/g, '');
     
-    if (cleanedPhoneNumber.length === 11) {
-      try {
-        if (!validatePhoneNumber(cleanedPhoneNumber)) {
-          throw new BadRequestException('유효하지 않은 전화번호 형식입니다.');
-        }
-      } catch (error) {
+    // 전화번호 유효성 검증
+    try {
+      if (!validatePhoneNumber(cleanedPhoneNumber)) {
         throw new BadRequestException('유효하지 않은 전화번호 형식입니다.');
       }
+    } catch (error) {
+      throw new BadRequestException('유효하지 않은 전화번호 형식입니다.');
     }
 
-    // 검색 방식 결정 (정확히 일치하는 경우와 부분 검색)
-    if (cleanedPhoneNumber.length === 11) {
-      return await this.writeRepository.find({ phoneNumber: cleanedPhoneNumber });
-    } else {
-      return await this.writeRepository.find({ phoneNumber: { $like: `%${cleanedPhoneNumber}%` } }, {
-        filters: false,
-        populate: []
-      });
-    }
+    return await this.writeRepository.find({ phoneNumber: cleanedPhoneNumber });
   }
   
   /**
