@@ -3,7 +3,6 @@ import { InternalApiController } from '../../../src/api/internal/internal-api.co
 import { InternalApiService } from '../../../src/api/internal/internal-api.service';
 import { DateValidationPipe } from '../../../src/api/internal/pipes/date-validation.pipe';
 
-// DateValidationPipe 클래스 모킹
 jest.mock('../../../src/api/internal/pipes/date-validation.pipe', () => {
   return {
     DateValidationPipe: jest.fn().mockImplementation(() => ({
@@ -19,7 +18,6 @@ describe('InternalApiController', () => {
   let controller: InternalApiController;
   let service: InternalApiService;
 
-  // 모의 서비스 객체 생성
   const mockInternalApiService = {
     getInquiries: jest.fn().mockImplementation((params, options) => {
       return {
@@ -44,6 +42,7 @@ describe('InternalApiController', () => {
   };
 
   beforeEach(async () => {
+    // given
     const module: TestingModule = await Test.createTestingModule({
       controllers: [InternalApiController],
       providers: [
@@ -59,71 +58,83 @@ describe('InternalApiController', () => {
   });
 
   it('컨트롤러가 정의되어 있어야 함', () => {
+    // then
     expect(controller).toBeDefined();
   });
 
   describe('getInquiries', () => {
     it('전화번호로 구매 상담 내역을 조회할 수 있어야 함', async () => {
-      // 테스트 실행
-      const result = await controller.getInquiries('01012345678');
+      // given
+      const phoneNumber = '01012345678';
       
-      // 서비스 메서드가 올바른 파라미터로 호출되었는지 확인
+      // When
+      const result = await controller.getInquiries(phoneNumber);
+      
+      // then
       expect(service.getInquiries).toHaveBeenCalledWith(
-        { phoneNumber: '01012345678', startDate: undefined, endDate: undefined },
+        { phoneNumber: phoneNumber, startDate: undefined, endDate: undefined },
         { page: 1, limit: 20, sort: 'createdAt', order: 'DESC' }
       );
       
-      // 결과 확인
+      // then
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
       expect(result.data[0].phoneNumber).toBe('01012345678');
     });
 
     it('날짜 범위로 구매 상담 내역을 조회할 수 있어야 함', async () => {
-      // 테스트용 날짜 문자열
+      // given
       const startDateStr = '2025-03-01';
       const endDateStr = '2025-03-31';
+      const startDate = new Date(startDateStr);
+      const endDate = new Date(endDateStr);
       
-      // 테스트 실행 - 문자열 대신 Date 객체 전달
+      // when
       const result = await controller.getInquiries(
         undefined, 
-        new Date(startDateStr), 
-        new Date(endDateStr)
+        startDate, 
+        endDate
       );
       
-      // 서비스 메서드가 올바른 파라미터로 호출되었는지 확인
+      // then
       expect(service.getInquiries).toHaveBeenCalledWith(
         { 
           phoneNumber: undefined, 
-          startDate: new Date(startDateStr), 
-          endDate: new Date(endDateStr) 
+          startDate: startDate, 
+          endDate: endDate 
         },
         { page: 1, limit: 20, sort: 'createdAt', order: 'DESC' }
       );
       
-      // 결과 확인
+      // then
       expect(result.success).toBe(true);
     });
 
     it('페이지네이션 옵션을 적용하여 구매 상담 내역을 조회할 수 있어야 함', async () => {
-      // 테스트 실행
+      // given
+      const page = '2';
+      const limit = '10';
+      const sort = 'id';
+      const order = 'ASC';
+      
+      // when
       const result = await controller.getInquiries(
         undefined, 
         undefined, 
         undefined,
-        '2',
-        '10',
-        'id',
-        'ASC'
+        page,
+        limit,
+        sort,
+        order
       );
       
-      // 서비스 메서드가 올바른 파라미터로 호출되었는지 확인
+      // then
       expect(service.getInquiries).toHaveBeenCalledWith(
         { phoneNumber: undefined, startDate: undefined, endDate: undefined },
         { page: 2, limit: 10, sort: 'id', order: 'ASC' }
       );
       
-      // 결과 확인
+      // then
       expect(result.success).toBe(true);
       expect(result.pagination.page).toBe(2);
       expect(result.pagination.limit).toBe(10);
