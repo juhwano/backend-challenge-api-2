@@ -54,10 +54,10 @@ class InquiryDto {
   businessNumber?: string;
 
   @ApiProperty({
-    description: '생성 시간 (유닉스 타임스탬프)',
-    example: 1744280658,
+    description: '생성 시간 (YYYY-MM-DD 형식)',
+    example: '2025-03-01',
   })
-  createdAt: number;
+  createdAt: string; // response시 타입을 number에서 string으로 변경
 }
 
 export class GetInquiriesResponseDto {

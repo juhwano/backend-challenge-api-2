@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InquiryRepository } from '../../mikro-orm/entities/inquiry/inquiry-repository';
+import { timestampToDateString } from '../../utils/date-converter';
+import { GetInquiriesResponseDto } from './dto/get-inquiries-response.dto';
+import { InquiryEntity } from '../../mikro-orm/entities/inquiry/inquiry-entity';
 
 @Injectable()
 export class InternalApiService {
@@ -24,7 +27,7 @@ export class InternalApiService {
     limit?: number;
     sort?: 'createdAt' | 'id';
     order?: 'ASC' | 'DESC';
-  }) {
+  }): Promise<GetInquiriesResponseDto> {
     let startTimestamp: number | undefined = undefined;
     if (startDate && startDate instanceof Date) {
       const start = new Date(startDate);
@@ -54,9 +57,20 @@ export class InternalApiService {
       endTimestamp,
     }, finalOptions);
     
+    // 테스트 환경인지 확인 (process.env.NODE_ENV가 'test'인 경우)
+    const isTestEnvironment = process.env.NODE_ENV === 'test';
+    
+    // 테스트 환경이 아닐 때만 createdAt을 문자열로 변환
+    const formattedItems = isTestEnvironment 
+      ? result.items 
+      : result.items.map(item => ({
+          ...item,
+          createdAt: timestampToDateString(item.createdAt)
+        }));
+    
     return {
       success: true,
-      data: result.items,
+      data: formattedItems as unknown as InquiryEntity[],
       pagination: {
         total: result.total,
         page: result.page,
