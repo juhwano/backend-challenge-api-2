@@ -73,7 +73,7 @@ export class InquiryRepository {
    * 전화번호와 날짜 범위로 구매 상담 내역을 검색합니다.
    * @param params 검색 조건 (전화번호, 시작 타임스탬프, 종료 타임스탬프)
    * @param options 페이지네이션 및 정렬 옵션
-   * @returns 검색 조건에 맞는 구매 상담 내역 목록과 총 개수
+   * @returns 검색 조건에 맞는 구매 상담 내역 목록
    */
   async findByPhoneNumberAndDateRange(
     params: {
@@ -86,6 +86,8 @@ export class InquiryRepository {
       limit?: number;
       sort?: 'createdAt' | 'id';
       order?: 'ASC' | 'DESC';
+      connectionType?: 'read' | 'write';
+      consistentRead?: boolean; // 일관성 있는 읽기 옵션 추가
     } = {}
   ) {
     console.log('검색 요청 파라미터:', params);
@@ -96,6 +98,15 @@ export class InquiryRepository {
     const limit = options.limit || 20;
     const sort = options.sort || 'createdAt';
     const order = options.order || 'DESC';
+    
+    // 데이터 정합성이 중요한 경우 마스터 DB 사용
+    let connectionType = options.connectionType || 'read';
+    
+    // 일관성 있는 읽기가 필요하거나 최근 데이터를 조회하는 경우 마스터 DB 사용
+    if (options.consistentRead === true || 
+        (params.startTimestamp && params.startTimestamp > Math.floor(Date.now() / 1000) - 300)) { // 최근 5분 이내 데이터
+      connectionType = 'write';
+    }
     
     const where: any = {};
     
@@ -119,11 +130,16 @@ export class InquiryRepository {
     // 정렬 옵션 설정
     const orderBy = { [sort]: order };
     
+    // 읽기 전용 복제본 연결 사용
+    const em = this.em.fork();
+    const connection = em.getConnection(connectionType);
+    
     // 페이지네이션 적용하여 조회
     const [items, total] = await this.writeRepository.findAndCount(where, {
       limit,
       offset: (page - 1) * limit,
       orderBy,
+      connectionType, // 연결 타입 명시
     });
     
     // 총 페이지 수 계산
